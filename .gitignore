@@ -1,1 +1,4 @@
-creds.json
+creds.py
+iris.db
+*.swp
+__pycache__/*
