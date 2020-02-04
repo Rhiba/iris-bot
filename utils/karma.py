@@ -13,10 +13,39 @@ def karma_parse(message):
     karma_changes = []
     for r in re_iter:
         g = r.groups()
-        items = g[0].strip().split(' ')
+        items = []
+        quote_stack = []
+        current_item = ''
+        idx = 0
+        while idx < len(g[0]):
+            ch = g[0][idx]
+            if ch == '"' and len(quote_stack) > 0 and quote_stack[-1] == '"':
+                quote_stack.pop()
+                current_item += g[0][idx+1] + g[0][idx+2]
+                items.append(current_item)
+                current_item = ''
+                idx += 4
+            elif ch == "'" and len(quote_stack) > 0 and quote_stack[-1] == "'":
+                quote_stack.pop()
+                current_item += g[0][idx+1] + g[0][idx+2]
+                items.append(current_item)
+                current_item = ''
+                idx += 4
+            elif ch == "'" or ch == '"':
+                quote_stack.append(ch)
+                idx += 1
+            elif ch == '+' or ch == '-' and len(quote_stack) == 0:
+                current_item += ch + g[0][idx+1]
+                items.append(current_item)
+                current_item = ''
+                idx += 3
+            else:
+                current_item += ch
+                idx += 1
+
         reason = g[9].strip() if g[9] else g[9]
         for item in items:
-            name = item[:-2].lower()
+            name = item[:-2]
             suffix = item[-2:]
             if suffix == '++':
                 change = 1
@@ -36,7 +65,7 @@ def karma_change(db_session, uid, changes):
     not_changed = []
 
     for tup in changes:
-        karma_name = tup[0]
+        karma_name = tup[0].lower()
         change = tup[1]
         reason = tup[2]
         # first, check if the karma_name already exists in karma database
@@ -64,9 +93,9 @@ def karma_change(db_session, uid, changes):
                 )
                 db_session.add(karma_change)
                 db_session.commit()
-                changed.append((karma_name,karma_change.score))
+                changed.append((tup[0],karma_change.score))
             else:
-                not_changed.append(karma_name)
+                not_changed.append(tup[0])
         else:
             karma_change = KarmaChange(
                 karma_id=karma_item.id,
@@ -78,7 +107,7 @@ def karma_change(db_session, uid, changes):
             )
             db_session.add(karma_change)
             db_session.commit()
-            changed.append((karma_name,karma_change.score))
+            changed.append((tup[0],karma_change.score))
 
         if change == -1:
             karma_item.pluses = karma_item.pluses + 1

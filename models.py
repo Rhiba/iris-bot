@@ -75,3 +75,15 @@ class User(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     uid = Column(BigInteger, nullable=False)
     admin = Column(Boolean,nullable=False,default=False)
+
+@auto_str
+class Command(Base):
+    __tablename__ = 'command'
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
+    name = Column(String, nullable=False)
+    description = Column(String)
+    command_string = Column(String,nullable=False)
+    added = Column(DateTime, nullable=False,default=datetime.utcnow())
+    admin = Column(Boolean,nullable=False,default=False)

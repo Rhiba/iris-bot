@@ -2,3 +2,4 @@ creds.py
 iris.db
 *.swp
 __pycache__/*
+utils/__pycache__/*

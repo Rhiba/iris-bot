@@ -2,6 +2,7 @@ import os
 import discord
 import json
 from utils.karma import karma_parse, karma_change
+from utils.command import process_commands
 from creds import CREDS
 from models import db_session, User
 
@@ -27,8 +28,10 @@ async def on_message(message):
         db_session.commit()
 
     # if message is a command, we want to do something with it
-    if message.content.lower().startswith('iris ') or message.content.startswith('!') or message.content.startswith(f'<@{client.user.id}> '):
-        await message.channel.send('All I can do is say hello for now: Hello!')
+    if message.content.lower().startswith('iris ') or message.content.startswith('!') or message.content.startswith(f'<@!{client.user.id}> '):
+        reply = process_commands(db_session, message)
+        if not reply == '':
+            await message.channel.send(reply)
     # otherwise, it might contain karma so we should parse it for karma
     else:
         changes = karma_parse(message)
