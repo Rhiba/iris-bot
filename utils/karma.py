@@ -93,7 +93,7 @@ def karma_change(db_session, uid, changes):
                 )
                 db_session.add(karma_change)
                 db_session.commit()
-                changed.append((tup[0],karma_change.score))
+                changed.append((tup[0],last_change.score,karma_change.score))
             else:
                 not_changed.append(tup[0])
         else:
@@ -107,7 +107,7 @@ def karma_change(db_session, uid, changes):
             )
             db_session.add(karma_change)
             db_session.commit()
-            changed.append((tup[0],karma_change.score))
+            changed.append((tup[0],'None',karma_change.score))
 
         if change == -1:
             karma_item.pluses = karma_item.pluses + 1
@@ -131,8 +131,8 @@ def karma_change(db_session, uid, changes):
     reply = ""
     if len(changed) > 0:
         reply += f"I have made changes to the following item{ch_item_plural}:\n"
-        for c,s in changed:
-            reply += f" • **{c}** (new score is {s})\n"
+        for c,o,s in changed:
+            reply += f" • **{c}** ({o} -> {s})\n"
 
     if len(not_changed) > 0:
         reply += f"Unfortunately, I couldn't make changes to the following item{n_item_plural} because of the cooldown period:\n"

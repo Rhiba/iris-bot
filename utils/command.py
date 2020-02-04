@@ -2,6 +2,7 @@ import discord
 from models import Command, User
 import commands
 from inspect import getmembers, isfunction
+import re
 
 functions_list = [o for o in getmembers(commands) if isfunction(o[1])]
 function_names = [o[0] for o in functions_list]
@@ -15,11 +16,35 @@ def process_commands(db_session, message):
     else:
         content = ' '.join(message.content.split(' ')[1:])
 
+    # different case for alias command
+    if content.split(' ')[0].lower() == 'alias':
+        command_name = content.split(' ')[1].lower()
+        if command_name == 'alias':
+            return "Command already exists: alias."
+        else:
+            exist_command = db_session.query(Command).filter(Command.name == command_name).one_or_none()
+            if exist_command:
+                return f"Command already exists: {command_name}."
+        command_string = ' '.join(content.split(' ')[2:])
+        if 'alias' in command_string:
+            return "Can't use alias command inside alias command."
+        else:
+            new_command = Command(user_id=user.id,name=command_name,description='',command_string=command_string)
+            db_session.add(new_command)
+            db_session.commit()
+            return f"Added command: {command_name}."
+
+
     commands = content.split('|')
+    commands = [c.strip() for c in commands]
     # iterate through commands until all of them have been transformed down to their hard coded version
     idx = 0
+    depth = 0
     while idx < len(commands):
-        command = commands.pop(idx)
+        depth += 1
+        if depth == 1001:
+            return 'Max loop depth reached (what did you do?!).'
+        command = commands.pop(idx).strip()
         # get first word
         words = command.split(' ')
         initial = words[0]
@@ -33,10 +58,35 @@ def process_commands(db_session, message):
         else:
             db_entry = db_session.query(Command).filter(Command.name == initial).one_or_none()
             if db_entry == None:
-                return f'Command not found: {initial}'
+                if initial == 'alias':
+                    return 'Alias can only be used as a standalone command.'
+                else:
+                    return f'Command not found: {initial}'
 
             command_string = db_entry.command_string
             new_command = command_string
+            highest = 0
+            if len(new_command.split(' ')) > 1:
+                tail_command = new_command.split(' ')[1:]
+                for a in tail_command:
+                    m = re.match('<([0-9]+)>',a)
+                    if m:
+                        num = int(m.group(1))
+                        if num > highest:
+                            highest = num
+
+                if highest > 0:
+                    for i in range(highest):
+                        if rest and len(rest) > 0:
+                            current = rest.pop(0)
+                            indices = [idx for idx,x in enumerate(tail_command) if x == '<'+str(i+1)+'>']
+                            for ind in indices:
+                                tail_command[ind] = current
+                        elif rest:
+                            return f'Not enough arguments supplied'
+
+            new_command = new_command.split(' ')[0] + ' ' + ' '.join(tail_command)
+
             if not rest == None:
                 new_command += ' ' + ' '.join(rest)
 
@@ -49,12 +99,22 @@ def process_commands(db_session, message):
         command_name = command.split(' ')[0]
         func = [o[1] for o in functions_list if o[0] == command_name][0]
         args = command.split(' ')[1:]
-        # check for placeholders here
-        for a in args:
-            #TODO
-            pass
-        reply = func(*args)
-        outputs.append(reply)
+        args = [a.strip() for a in args]
+
+        # get highest placeholder num in args
+
+        for idx,o in enumerate(outputs):
+            pos_string = '<'+str(idx+1)+'>'
+            if not pos_string in args:
+                args.append(o)
+            else:
+                indices = [idx for idx,x in enumerate(args) if x == pos_string]
+                for ind in indices:
+                    args[ind] = o
+
+        reply = func(db_session,*args)
+        for r in reply:
+            outputs.append(r)
 
     return outputs[-1]
 

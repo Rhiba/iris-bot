@@ -28,7 +28,7 @@ async def on_message(message):
         db_session.commit()
 
     # if message is a command, we want to do something with it
-    if message.content.lower().startswith('iris ') or message.content.startswith('!') or message.content.startswith(f'<@!{client.user.id}> '):
+    if message.content.lower().startswith('iris ') or (message.content.startswith('!') and not message.content.startswith('!!')) or message.content.startswith(f'<@!{client.user.id}> '):
         reply = process_commands(db_session, message)
         if not reply == '':
             await message.channel.send(reply)
@@ -38,6 +38,5 @@ async def on_message(message):
         if len(changes) > 0:
             reply = karma_change(db_session, author, changes)
             await message.channel.send(reply)
-
 
 client.run(token)
