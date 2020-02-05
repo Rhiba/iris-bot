@@ -6,7 +6,7 @@ Discord bot for personal server.
 `sqlite3`
 
 ### Python packages:
-`discord.py`
+`discord`
 `sqlalchemy`
 `sqlalchemy_utils`
 `alembic`

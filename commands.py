@@ -1,13 +1,25 @@
 from models import Karma, KarmaChange
 from sqlalchemy import desc
+import random
 
 def say(db_session, *args):
     return [' '.join(args)]
 
+def rand(db_session, *args):
+    if len(args) != 2:
+        return ['!rand <min> <max>']
+    try:
+        return [str(random.randint(int(args[0]), int(args[1])))]
+    except ValueError:
+        return ['Please give me integers']
+
+def randf(db_session, *args):
+    return [str(random.random())]
+
 def karma(db_session, *args):
     reply = ''
     if len(args) == 0:
-        return 'No item provided.'
+        return ['No item provided.']
 
     items = []
     no_karma = []
