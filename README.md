@@ -6,10 +6,11 @@ Discord bot for personal server.
 `sqlite3`
 
 ### Python packages:
-`discord.py`
+`discord`
 `sqlalchemy`
 `sqlalchemy_utils`
 `alembic`
+`pytz`
 
 ## Setup
 1) Create a discord bot project on the discord website.
