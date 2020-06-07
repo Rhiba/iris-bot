@@ -47,7 +47,7 @@ def process_commands(db_session, message):
         command = commands.pop(idx).strip()
         # get first word
         words = command.split(' ')
-        initial = words[0]
+        initial = words[0].lower()
         rest = None
         if len(words) > 1:
             rest = words[1:]

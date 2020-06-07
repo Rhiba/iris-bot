@@ -87,3 +87,22 @@ class Command(Base):
     command_string = Column(String,nullable=False)
     added = Column(DateTime, nullable=False,default=datetime.utcnow())
     admin = Column(Boolean,nullable=False,default=False)
+
+@auto_str
+class GymToken(Base):
+    __tablename__ = 'gym_tokens'
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    phpsessid = Column(String)
+    csrf = Column(String)
+    identity = Column(String)
+    url = Column(String)
+
+@auto_str
+class GymNotification(Base):
+    __tablename__ = 'gym_notifications'
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    class_name = Column(String, nullable=False)
+    class_time = Column(DateTime, nullable=False)
+    notified = Column(Boolean,nullable=False,default=False)

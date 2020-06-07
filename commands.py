@@ -1,6 +1,13 @@
-from models import Karma, KarmaChange
+from models import Karma, KarmaChange, GymNotification, GymToken
 from sqlalchemy import desc
 import random
+
+def gym_notify(db_session, *args):
+    if not len(args) == 2: 
+        print('Wrong number of arguments.')
+    class_name = args[0]
+    class_time = args[1]
+    return ['test']
 
 def say(db_session, *args):
     return [' '.join(args)]

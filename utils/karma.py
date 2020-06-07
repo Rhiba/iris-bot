@@ -7,43 +7,81 @@ from datetime import datetime, timedelta
 
 from creds import CREDS
 
+def filter_codeblocks(content):
+    filtering = False
+    remove_indices = []
+    start_index = -1
+    end_index = -1
+    for idx,ch in enumerate(content):
+        if filtering == False and ch == '`' and content[idx+1] == '`' and content[idx+2] == '`':
+            filtering = True
+            start_index = idx
+        elif filtering == True and ch == '`' and content[idx-1] == '`' and content[idx-2] == '`':
+            filtering = False
+            end_index = idx
+            remove_indices.append((start_index,end_index))
+
+    output = ''
+    if len(remove_indices) == 0:
+        output = content
+    else:
+        prev = 0
+        for ri in remove_indices:
+            output += content[prev:ri[0]]
+            prev = ri[1]+1
+        output += content[prev:]
+
+    return output
+
+def filter_inlinecode(content):
+    filtering = False
+    remove_indices = []
+    start_index = -1
+    end_index = -1
+    for idx,ch in enumerate(content):
+        if filtering == False and ch == '`':
+            filtering = True
+            start_index = idx
+        elif filtering == True and ch == '`':
+            filtering = False
+            end_index = idx
+            remove_indices.append((start_index,end_index))
+
+    output = ''
+    if len(remove_indices) == 0:
+        output = content
+    else:
+        prev = 0
+        for ri in remove_indices:
+            output += content[prev:ri[0]]
+            prev = ri[1]+1
+        output += content[prev:]
+
+    return output
+
 def karma_parse(message):
-    karma_regex = re.compile(r'(((("|\')(.*)(\4)|([^ \n]*))(\+\+|\+\-|\-\+|\-\-)( )?)+)(\(.*\)|(because|for)([^;\n]*?(?=( (("|\').*(\15)|[^ \n]*)(\+\+|\+\-|\-\+|\-\-))|[;\n]|$)))?')
-    re_iter = karma_regex.finditer(message.content)
+    karma_regex = re.compile(r'(((("|\')(.+)(\4)|([^ \n]+))(\+\+|\+\-|\-\+|\-\-)( )?)+)(\(.*\)|(because|for)([^;\n]*?(?=( (("|\').+(\15)|[^ \n]+)(\+\+|\+\-|\-\+|\-\-))|[;\n]|$)))?')
+    item_regex = re.compile(r'((("|\')(.+)(\3)|([^ \n]+))(\+\+|\+\-|\-\+|\-\-))')
+    content = filter_codeblocks(filter_inlinecode(message.content))
+    re_iter = karma_regex.finditer(content)
     karma_changes = []
     for r in re_iter:
         g = r.groups()
-        items = []
-        quote_stack = []
-        current_item = ''
-        idx = 0
-        while idx < len(g[0]):
-            ch = g[0][idx]
-            if ch == '"' and len(quote_stack) > 0 and quote_stack[-1] == '"':
-                quote_stack.pop()
-                current_item += g[0][idx+1] + g[0][idx+2]
-                items.append(current_item)
-                current_item = ''
-                idx += 4
-            elif ch == "'" and len(quote_stack) > 0 and quote_stack[-1] == "'":
-                quote_stack.pop()
-                current_item += g[0][idx+1] + g[0][idx+2]
-                items.append(current_item)
-                current_item = ''
-                idx += 4
-            elif ch == "'" or ch == '"':
-                quote_stack.append(ch)
-                idx += 1
-            elif ch == '+' or ch == '-' and len(quote_stack) == 0:
-                current_item += ch + g[0][idx+1]
-                items.append(current_item)
-                current_item = ''
-                idx += 3
-            else:
-                current_item += ch
-                idx += 1
-
+        item_string = g[0]
         reason = g[9].strip() if g[9] else g[9]
+
+        items = []
+        item_iter = item_regex.finditer(item_string)
+        for it in item_iter:
+            i = it.groups()[0]
+            string_name = i[:-2]
+            if len(string_name) >= 3 and string_name.startswith('"') and string_name.endswith('"'):
+                items.append(string_name[1:-1] + i[-2:])
+            elif len(string_name) >= 3 and string_name.startswith("'") and string_name.endswith("'"):
+                items.append(string_name[1:-1] + i[-2:])
+            elif len(string_name) > 1:
+                items.append(i)
+
         for item in items:
             name = item[:-2]
             suffix = item[-2:]
