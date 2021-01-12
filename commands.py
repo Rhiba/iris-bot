@@ -51,6 +51,25 @@ def roll(db_session, *args):
 
     return [result]
 
+def widen(db_session, *args):
+    if len(args) > 0:
+        reply = ""
+        for a in args:
+            for c in a.upper():
+                reply += c + " "
+        return [reply]
+    else:    
+        return ['No item provided.']
+
+def contract(db_session, *args):
+    if len(args) == 1:
+        reply = args[0][0]
+        reply += str(len(args[0][1:-1]))
+        reply += args[0][-1]
+        return [reply]
+    else:    
+        return ['Exactly one item please.']
+
 def karma(db_session, *args):
     reply = ''
     if len(args) == 0:
