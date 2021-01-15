@@ -16,6 +16,9 @@ def process_commands(db_session, message):
     else:
         content = ' '.join(message.content.split(' ')[1:])
 
+    # for now, if command starts with !s/ IGNORE IT
+    if content.split(' ')[0].lower().startswith('s/'):
+        return ""
     # different case for alias command
     if content.split(' ')[0].lower() == 'alias':
         command_name = content.split(' ')[1].lower()
@@ -112,7 +115,7 @@ def process_commands(db_session, message):
                 for ind in indices:
                     args[ind] = o
 
-        reply = func(db_session,*args)
+        reply = func(db_session,message,*args)
         for r in reply:
             outputs.append(r)
 

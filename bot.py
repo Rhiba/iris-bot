@@ -6,7 +6,8 @@ from utils.karma import karma_parse, karma_change
 from utils.command import process_commands
 from utils.gym import check_for_classes
 from creds import CREDS
-from models import db_session, User
+from models import db_session, User, Reminder
+import datetime
 
 token = CREDS['DISCORD_TOKEN']
 
@@ -21,6 +22,28 @@ async def gym_check():
         if not response == '':
             await channel.send(response)
         await asyncio.sleep(60)
+
+async def reminder_check():
+    await client.wait_until_ready()
+    while not client.is_closed():
+        # first get all the none "done" reminders
+        not_done = db_session.query(Reminder).filter(Reminder.done == False).all()
+        for nd in not_done:
+            # if trigger time is in the past
+            if nd.trigger_time < datetime.datetime.utcnow():
+                content = nd.content
+                rid = nd.id
+                # set done to True
+                nd.done = True
+                db_session.commit()
+
+                user_id = nd.user_id
+                user = db_session.query(User).filter(User.id == user_id).first()
+                channel = client.get_channel(nd.channel_id)
+                response = f'<@!{user.uid}> {content}'
+                await channel.send(response)
+        # TODO: make this granularity set-able
+        await asyncio.sleep(10)
 
 @client.event
 async def on_ready():
@@ -52,4 +75,5 @@ async def on_message(message):
             await message.channel.send(reply)
 
 client.loop.create_task(gym_check())
+client.loop.create_task(reminder_check())
 client.run(token)

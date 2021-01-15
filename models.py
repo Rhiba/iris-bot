@@ -89,6 +89,19 @@ class Command(Base):
     admin = Column(Boolean,nullable=False,default=False)
 
 @auto_str
+class Reminder(Base):
+    __tablename__ = 'reminder'
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    channel_id = Column(Integer, nullable=False)
+    trigger_time = Column(DateTime, nullable=False)
+    content = Column(String, nullable=False)
+    added = Column(DateTime, nullable=False,default=datetime.utcnow())
+    persistent = Column(Boolean,nullable=False,default=False)
+    snoozed = Column(Boolean,nullable=False,default=False)
+    done = Column(Boolean,nullable=False,default=False)
+
+@auto_str
 class GymToken(Base):
     __tablename__ = 'gym_tokens'
     id = Column(Integer, primary_key=True, nullable=False)

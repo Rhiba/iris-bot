@@ -1,24 +1,26 @@
-from models import Karma, KarmaChange, GymNotification, GymToken
+from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
 from sqlalchemy import desc
 import random
+import dateutil
+import re
 
-def gym_notify(db_session, *args):
+def gym_notify(db_session, message, *args):
     if not len(args) == 2: 
         print('Wrong number of arguments.')
     class_name = args[0]
     class_time = args[1]
     return ['test']
 
-def say(db_session, *args):
+def say(db_session, message, *args):
     return [' '.join(args)]
 
-def flip(db_session, *args):
+def flip(db_session, message, *args):
     if len(args) == 0:
         return ["🖕"]
     result = random.randint(0, len(args)-1)
     return [args[result]]
 
-def roll(db_session, *args):
+def roll(db_session, message, *args):
     if len(args) != 1 and len(args) != 2:
         return ['!roll <x>d<y> <opt> - roll a y sided die x times (optionally take the high or sum)']
     pos = args[0].find('d')
@@ -51,7 +53,7 @@ def roll(db_session, *args):
 
     return [result]
 
-def widen(db_session, *args):
+def widen(db_session, message, *args):
     if len(args) > 0:
         reply = ""
         for a in args:
@@ -61,7 +63,7 @@ def widen(db_session, *args):
     else:    
         return ['No item provided.']
 
-def contract(db_session, *args):
+def contract(db_session, message, *args):
     if len(args) == 1:
         reply = args[0][0]
         reply += str(len(args[0][1:-1]))
@@ -70,10 +72,10 @@ def contract(db_session, *args):
     else:    
         return ['Exactly one item please.']
 
-def karma(db_session, *args):
+def karma(db_session, message, *args):
     reply = ''
     if len(args) == 0:
-        return ['No item provided.']
+        return ['!karma <item>']
 
     items = []
     no_karma = []
@@ -108,3 +110,62 @@ def karma(db_session, *args):
             reply += f' • **{nk}**\n'
 
     return [reply.rstrip()]
+
+def remindme(db_session, message, *args):
+    reply = ''
+    if len(args) == 0:
+        # TODO: make this granularity set-able
+        return ['!remindme <date/time> <message>\nFormat (brackets optional, either date, time or both):\n** - (dd/mm(/yy(yy))) (hh:mm(:ss))**\nGranularity set to 10s.']
+    elif len(args) == 1:
+        return ['Missing argument.']
+    else:
+        date = None
+        time = None
+        if re.match(r'^[0-3]?[0-9]/[01]?[0-9](/[0-9][0-9]([0-9][0-9])?)?$',args[0]):
+            # got a date
+            date = args[0]
+        i = 0 if date == None else 1
+
+        if re.match(r'[0-2]?[0-9]:[0-5]?[0-9](:[0-5]?[0-9])?',args[i]):
+            time = args[i]
+
+        if time == None and date == None:
+            return ['Invalid time and date format.']
+
+        date_str = ''
+        if not date == None:
+            date_str += date + ' '
+        if not time == None:
+            date_str += time
+        date_str = date_str.strip()
+        
+        valid_date = None
+        try:
+            valid_date = dateutil.parser.parse(date_str,dayfirst=True)
+        except ValueError:
+            return ['Date doesn\'t exist.']
+
+        if time == None or date == None:
+            content = ' '.join(args[1:])
+        else:
+            content = ' '.join(args[2:])
+
+        user = db_session.query(User).filter(User.uid == message.author.id).first()
+        channel_id = message.channel.id
+        trigger_time = valid_date
+        # used to constantly message a person about it until they say otherwise
+        persistent = False
+
+        reminder = Reminder(
+            user_id = user.id,
+            channel_id = channel_id,
+            trigger_time = trigger_time,
+            content = content,
+            persistent = persistent
+        )
+        db_session.add(reminder)
+        db_session.commit()
+        return ['Added reminder on ' + str(valid_date) + '.']
+
+def timer(db_session, message, *args):
+    return ['Not implemented.']
