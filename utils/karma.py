@@ -95,7 +95,7 @@ def karma_parse(message):
 
     return karma_changes
 
-def karma_change(db_session, uid, changes):
+def karma_change(db_session, client, uid, changes):
     # get user from db
     user = db_session.query(User).filter(User.uid == uid).first()
 
@@ -103,7 +103,12 @@ def karma_change(db_session, uid, changes):
     not_changed = []
 
     for tup in changes:
+        karma_name_raw = tup[0]
         karma_name = tup[0].lower()
+        if karma_name == 'me':
+            d_user = client.get_user(uid)
+            karma_name_raw = d_user.name
+            karma_name = d_user.name.lower()
         change = tup[1]
         reason = tup[2]
         # first, check if the karma_name already exists in karma database
@@ -131,9 +136,9 @@ def karma_change(db_session, uid, changes):
                 )
                 db_session.add(karma_change)
                 db_session.commit()
-                changed.append((tup[0],last_change.score,karma_change.score))
+                changed.append((karma_name_raw,last_change.score,karma_change.score))
             else:
-                not_changed.append(tup[0])
+                not_changed.append(karma_name_raw)
         else:
             karma_change = KarmaChange(
                 karma_id=karma_item.id,
@@ -145,7 +150,7 @@ def karma_change(db_session, uid, changes):
             )
             db_session.add(karma_change)
             db_session.commit()
-            changed.append((tup[0],'None',karma_change.score))
+            changed.append((karma_name_raw,'None',karma_change.score))
 
         if change == -1:
             karma_item.pluses = karma_item.pluses + 1

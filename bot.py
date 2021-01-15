@@ -71,7 +71,7 @@ async def on_message(message):
     else:
         changes = karma_parse(message)
         if len(changes) > 0:
-            reply = karma_change(db_session, author, changes)
+            reply = karma_change(db_session, client, author, changes)
             await message.channel.send(reply)
 
 client.loop.create_task(gym_check())
