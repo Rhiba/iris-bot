@@ -113,7 +113,7 @@ def karma_change(db_session, client, uid, changes):
             karma_name = d_user.name.lower()
         # ezzy fix
         elif karma_name == 'ezzy':
-            karma_name == 'esther'
+            karma_name = 'esther'
         # first, check if the karma_name already exists in karma database
         karma_item = db_session.query(Karma).filter(Karma.name == karma_name).one_or_none()
         if karma_item == None:
