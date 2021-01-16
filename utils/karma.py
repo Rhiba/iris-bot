@@ -101,12 +101,10 @@ def karma_change(db_session, client, uid, changes):
 
     changed = []
     not_changed = []
-
+    
     for tup in changes:
         karma_name_raw = tup[0]
         karma_name = tup[0].lower()
-        change = tup[1]
-        reason = tup[2]
         if karma_name == 'me':
             d_user = client.get_user(uid)
             karma_name_raw = d_user.name
@@ -114,6 +112,10 @@ def karma_change(db_session, client, uid, changes):
         # ezzy fix
         elif karma_name == 'ezzy':
             karma_name = 'esther'
+
+        change = tup[1]
+        reason = tup[2]
+
         # first, check if the karma_name already exists in karma database
         karma_item = db_session.query(Karma).filter(Karma.name == karma_name).one_or_none()
         if karma_item == None:
