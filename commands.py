@@ -3,6 +3,7 @@ from sqlalchemy import desc
 import random
 import dateutil
 import re
+from utils.quotes import quotes
 
 def gym_notify(db_session, message, *args):
     if not len(args) == 2: 
@@ -169,3 +170,9 @@ def remindme(db_session, message, *args):
 
 def timer(db_session, message, *args):
     return ['Not implemented.']
+
+def uplift(): 
+    x = random.choice(quotes)
+    return [x]
+
+    
