@@ -171,7 +171,7 @@ def remindme(db_session, message, *args):
 def timer(db_session, message, *args):
     return ['Not implemented.']
 
-def uplift(): 
+def uplift(db_session, message, *args): 
     x = random.choice(quotes)
     return [x]
 
