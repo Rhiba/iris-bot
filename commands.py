@@ -7,6 +7,7 @@ from sqlalchemy import desc
 
 import utils.e4d
 from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
+from utils.quotes import quotes
 
 def gym_notify(db_session, message, *args):
     if not len(args) == 2:
@@ -173,6 +174,10 @@ def remindme(db_session, message, *args):
 
 def timer(db_session, message, *args):
     return ['Not implemented.']
+
+def uplift(db_session, message, *args): 
+    x = random.choice(quotes)
+    return [x]
 
 def e4d(db_session, message, *input_words):
     if utils.e4d.SYSTEM_WORDS_LIST is None:
