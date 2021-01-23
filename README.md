@@ -1,29 +1,45 @@
 # iris-bot
+
 Discord bot for personal server.
 
 ## Requirements:
-`python3`
-`sqlite3`
+
+* `python3`
+* `sqlite3`
 
 ### Python packages:
-`discord`
-`sqlalchemy`
-`sqlalchemy_utils`
-`alembic`
-`pytz`
+
+* `discord`
+* `sqlalchemy`
+* `sqlalchemy_utils`
+* `alembic`
+* `pytz`
 
 ## Setup
+
 1) Create a discord bot project on the discord website.
 2) Create a new python file called `creds.py` with the following format:
+
+    ```python
+    CREDS = {
+        "DISCORD_TOKEN": "your_token_here",
+        "DATABASE_CONNECTION": "sqlite:///iris.db",
+        "SQL_LOGGING": True,
+        "KARMA_TIMEOUT_S": 120
+    }
     ```
-        CREDS = {
-            "DISCORD_TOKEN": "your_token_here",
-            "DATABASE_CONNECTION": "sqlite:///iris.db",
-            "SQL_LOGGING": True,
-            "KARMA_TIMEOUT_S": 120
-        }
-    ```
-    Where `your_token_here` comes from your discord bot project.
+
+    where `your_token_here` comes from the Bot section of your discord bot project (Settings > Bot).
+
 3) Create blank database by running: `sqlite3 iris.db "VACUUM;"`
 4) Run `alembic upgrade head`
-5) Manually insert first admin user into the `user` table by first running `sqlite3 iris.db`, then in the sqlite3 command line, running `INSERT INTO user (uid,admin) VALUES (your_integer_id,1);` where `your_integer_id` is your discord user id (gotten by right clicking on your user in discord and clicking `Copy Id`, make sure developer mode is enabled in Appearance settings for this option to be available).
+5) Manually insert first admin user into the `user` table by running
+
+    ```
+    $ sqlite3 iris.db
+    sqlite> INSERT INTO user (uid,admin) VALUES (<USER_ID>,1);
+    ```
+
+    where `<USER_ID>` is your discord integer id. You can find this by
+    enabling developer mode (User Settings > Appearance), then clicking on your
+    user in Discord and selecting "Copy ID".

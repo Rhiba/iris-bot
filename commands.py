@@ -17,6 +17,8 @@ def gym_notify(db_session, message, *args):
     return ['test']
 
 def say(db_session, message, *args):
+    if len(args) == 0:
+        return ['say wot mate?']
     return [' '.join(args)]
 
 def flip(db_session, message, *args):
@@ -189,4 +191,4 @@ def e4d(db_session, message, *input_words):
     matches = [utils.e4d.match_abbr(abbr) if abbr else None
                for abbr in parsed_abbrs]
     output_lines = starmap(utils.e4d.to_output_line, zip(input_words, matches))
-    return ["\n".join(output_lines)]
+    return utils.e4d.to_output_messages(output_lines)

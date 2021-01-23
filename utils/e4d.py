@@ -1,11 +1,12 @@
 import logging
 from collections import namedtuple
+from functools import reduce
 from typing import List, Optional
 
 Abbr = namedtuple("Abbr", "first_letter length last_letter")
 
 try:
-    with open("/usr/share/dict/words") as words_file:
+    with open("/usr/share/dict/british-english-insane") as words_file:
         SYSTEM_WORDS_LIST = [line.strip() for line in words_file]
 except FileNotFoundError:
     logging.getLogger("e4d").warning(
@@ -38,4 +39,17 @@ def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
         result_str = "<No matches>"
     else:
         result_str = "_{}_".format(", ".join(matches))
-    return f"*{input_word}*: {result_str}"
+    return f"**{input_word}**: {result_str}"
+
+
+def to_output_messages(output_lines: List[str]) -> List[str]:
+    def combine(a: List[str], x: str):
+        if not a or len(a[-1]) + len(x) > 2000 - 1:
+            a.append(x)
+        else:
+            a[-1] = a[-1] + f"\n{x}"
+        return a
+    messages = reduce(combine, output_lines, [])
+    if len(messages) == 1:
+        return messages
+    return [messages]
