@@ -29,7 +29,8 @@ def match_abbr(abbr: Abbr) -> List[str]:
     return [w for w in SYSTEM_WORDS_LIST
             if w[0].lower() == abbr.first_letter
             and w[-1].lower() == abbr.last_letter
-            and len(w) == abbr.length + 2]
+            and len(w) == abbr.length + 2
+            and "'" not in w]
 
 
 def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
