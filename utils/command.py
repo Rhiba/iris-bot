@@ -7,6 +7,20 @@ import re
 functions_list = [o for o in getmembers(commands) if isfunction(o[1])]
 function_names = [o[0] for o in functions_list]
 
+
+def is_non_str_iterable(x):
+    return isinstance(x, Iterable) and not isinstance(x, str)
+
+
+def truncate_message(msg, length=2000):
+    """ Limit message length and add truncation notice """
+    truncation_message = " *<truncated due to length>*"
+    max_message_length = 2000 - len(truncation_message)
+    if len(msg) > max_message_length:
+        return msg[:max_message_length] + truncation_message
+    return msg
+
+
 def process_commands(db_session, message):
     user = db_session.query(User).filter(User.uid == message.author.id).first()
     # here we want to split the commands up by pipes
@@ -110,7 +124,7 @@ def process_commands(db_session, message):
         # get highest placeholder num in args
 
         for idx, o in enumerate(outputs):
-            if isinstance(o, Iterable) and not isinstance(o, str):
+            if is_non_str_iterable(o):
                 o = "\n".join(o)
 
             pos_string = '<'+str(idx+1)+'>'
@@ -123,4 +137,11 @@ def process_commands(db_session, message):
 
         reply = func(db_session, message, *args)
         outputs.extend(reply)
-    return outputs[-1]
+
+    output_message = outputs[-1]
+    if is_non_str_iterable(output_message):
+        output_message = [truncate_message(m) for m in output_message]
+    else:
+        output_message = truncate_message(output_message)
+    return output_message
+
