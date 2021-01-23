@@ -38,4 +38,4 @@ def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
         result_str = "<No matches>"
     else:
         result_str = "_{}_".format(", ".join(matches))
-    return f"*{input_word}*: {result_str}"
+    return f"**{input_word}**: {result_str}"
