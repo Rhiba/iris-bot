@@ -4,7 +4,7 @@ import commands
 from inspect import getmembers, isfunction
 import re
 
-functions_list = [o for o in getmembers(commands) if isfunction(o[1])]
+functions_list = getmembers(commands, isfunction)
 function_names = [o[0] for o in functions_list]
 
 
