@@ -15,9 +15,10 @@ def is_non_str_iterable(x):
 def truncate_message(msg, length=2000):
     """ Limit message length and add truncation notice """
     truncation_message = " *<truncated due to length>*"
-    max_message_length = 2000 - len(truncation_message)
-    if len(msg) > max_message_length:
-        return msg[:max_message_length] + truncation_message
+    MAX_LEN = 2000
+    if len(msg) > MAX_LEN:
+        truncation_point = MAX_LEN - len(truncation_message)
+        return msg[:truncation_point] + truncation_message
     return msg
 
 
