@@ -70,14 +70,19 @@ def widen(db_session, message, *args):
     else:
         return ['No item provided.']
 
-def contract(db_session, message, *args):
-    if len(args) == 1:
-        reply = args[0][0]
-        reply += str(len(args[0][1:-1]))
-        reply += args[0][-1]
-        return [reply]
-    else:
-        return ['Exactly one item please.']
+
+def contract(db_session, message, *input_words):
+    contractions = []
+    for word in input_words:
+        try:
+            first, *middle, last = word
+        except ValueError:
+            continue
+        contractions.append(f"{first}{len(middle)}{last}")
+    if contractions:
+        return [" ".join(contractions)]
+    return ["No valid words to contract."]
+
 
 def karma(db_session, message, *args):
     reply = ''
