@@ -7,7 +7,7 @@ import re
 functions_list = [o for o in getmembers(commands) if isfunction(o[1])]
 function_names = [o[0] for o in functions_list]
 
-def process_commands(db_session, message):
+def process_commands(db_session, client, message):
     user = db_session.query(User).filter(User.uid == message.author.id).first()
     # here we want to split the commands up by pipes
     # we also want to pull commands from the hard coded ones, or the composite commands in the Command table (that are user defined)
@@ -60,14 +60,14 @@ def process_commands(db_session, message):
             idx += 1
         else:
             db_entry = db_session.query(Command).filter(Command.name == initial).one_or_none()
-            if db_entry == None:
+            if db_entry is None:
                 if initial == 'alias':
                     return 'Alias can only be used as a standalone command.'
-                else:
-                    if not message.content.tolower().startswith('iris '):
-                        return f'Command not found: {initial}'
-                    else:
-                        return ''
+
+                bot_username = client.user.name.lower()
+                if initial in {"iris", f"<@!{client.user.id}>", bot_username}:
+                    return ''
+                return f'Command not found: {initial}'
 
             command_string = db_entry.command_string
             new_command = command_string
