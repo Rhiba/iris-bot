@@ -1,13 +1,16 @@
+import asyncio
+import datetime
 import os
+from collections.abc import Iterable
+
 import discord
 import json
-import asyncio
-from utils.karma import karma_parse, karma_change
-from utils.command import process_commands
-from utils.gym import check_for_classes
+
 from creds import CREDS
 from models import db_session, User, Reminder
-import datetime
+from utils.command import process_commands
+from utils.gym import check_for_classes
+from utils.karma import karma_parse, karma_change
 
 token = CREDS['DISCORD_TOKEN']
 
