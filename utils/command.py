@@ -80,7 +80,8 @@ def process_commands(db_session,  client, message):
                     return 'Alias can only be used as a standalone command.'
 
                 bot_username = client.user.name.lower()
-                if initial in {"iris", f"<@!{client.user.id}>", bot_username}:
+                mg = message.content.lower()
+                if mg.startswith('iris ') or mg.startswith(f"<@!{client.user.id}> ") or mg.startswith(bot_username+' '):
                     return ''
                 return f'Command not found: {initial}'
 
