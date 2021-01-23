@@ -4,6 +4,7 @@ import random
 import dateutil
 import re
 from utils.quotes import quotes
+from data import poems
 
 def gym_notify(db_session, message, *args):
     if not len(args) == 2: 
@@ -176,5 +177,10 @@ def timer(db_session, message, *args):
 def uplift(db_session, message, *args): 
     x = random.choice(quotes)
     return [x]
+
+def poem(db_session, message, *args):
+   for author in poems:
+        if author == args:
+           return poems[author]
 
     
