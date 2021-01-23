@@ -177,7 +177,7 @@ def remindme(db_session, message, *args):
 def timer(db_session, message, *args):
     return ['Not implemented.']
 
-def uplift(db_session, message, *args): 
+def uplift(db_session, message, *args):
     x = random.choice(quotes)
     return [x]
 
@@ -188,16 +188,11 @@ def e4d(db_session, message, *input_words):
     if not input_words:
         return ["Example usage:\n\t!e4d i18n\n\t!e4d i18n a11y"]
 
-    parsed_abbrs = map(utils.e4d.parse_abbr, input_words)
-    matches = [utils.e4d.match_abbr(abbr) if abbr else None
-               for abbr in parsed_abbrs]
-    choices = map(random.choice, matches)
-    if len(input_words) == 1:
-        return [next(choices)]
-
-    choices = map(lambda x: [x], choices)
-    output_lines = starmap(utils.e4d.to_output_line, zip(input_words, choices))
-    return utils.e4d.to_output_messages(output_lines)
+    return [" ".join([
+        random.choice(matches)
+        for matches in utils.e4d.get_matches(input_words)
+        if matches
+    ])]
 
 
 def e5d(db_session, message, *input_words):
@@ -206,8 +201,6 @@ def e5d(db_session, message, *input_words):
     if not input_words:
         return ["Example usage:\n\t!e5d i18n\n\t!e5d i18n a11y"]
 
-    parsed_abbrs = map(utils.e4d.parse_abbr, input_words)
-    matches = [utils.e4d.match_abbr(abbr) if abbr else None
-               for abbr in parsed_abbrs]
+    matches = utils.e4d.get_matches(input_words)
     output_lines = starmap(utils.e4d.to_output_line, zip(input_words, matches))
     return utils.e4d.to_output_messages(output_lines)
