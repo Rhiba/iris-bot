@@ -17,6 +17,8 @@ def gym_notify(db_session, message, *args):
     return ['test']
 
 def say(db_session, message, *args):
+    if len(args) == 0:
+        return ['say wot mate?']
     return [' '.join(args)]
 
 def flip(db_session, message, *args):
