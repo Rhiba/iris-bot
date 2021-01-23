@@ -7,6 +7,16 @@ import re
 functions_list = [o for o in getmembers(commands) if isfunction(o[1])]
 function_names = [o[0] for o in functions_list]
 
+
+def truncate_message(msg, length=2000):
+    """ Limit message length and add truncation notice """
+    truncation_message = " *<truncated due to length>*"
+    max_message_length = 2000 - len(truncation_message)
+    if len(msg) > max_message_length:
+        return msg[:max_message_length] + truncation_message
+    return msg
+
+
 def process_commands(db_session, message):
     user = db_session.query(User).filter(User.uid == message.author.id).first()
     # here we want to split the commands up by pipes
@@ -118,9 +128,8 @@ def process_commands(db_session, message):
                 for ind in indices:
                     args[ind] = o
 
-        reply = func(db_session,message,*args)
+        reply = func(db_session, message, *args)
         for r in reply:
             outputs.append(r)
-
-    return outputs[-1]
+    return truncate_message(outputs[-1])
 
