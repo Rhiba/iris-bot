@@ -1,9 +1,13 @@
+import itertools as I
 import logging
 from collections import namedtuple
 from functools import reduce
 from typing import List, Optional
 
+import numpy as np
+
 Abbr = namedtuple("Abbr", "first_letter length last_letter")
+MAX_LEN = 2000
 
 try:
     with open("/usr/share/dict/british-english-insane") as words_file:
@@ -43,9 +47,9 @@ def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
     return f"**{input_word}**: {result_str}"
 
 
-def to_output_messages(output_lines: List[str]) -> List[str]:
+def line_list_to_messages(output_lines: List[str]) -> List[str]:
     def combine(a: List[str], x: str):
-        if not a or len(a[-1]) + len(x) > 2000 - 1:
+        if not a or len(a[-1]) + len(x) + 1 > MAX_LEN:
             a.append(x)
         else:
             a[-1] = a[-1] + f"\n{x}"
@@ -54,3 +58,21 @@ def to_output_messages(output_lines: List[str]) -> List[str]:
     if len(messages) == 1:
         return messages
     return [messages]
+
+
+def to_output_messages(output_lines: List[str]) -> List[str]:
+    def split(x: str) -> [str]:
+        if len(x) <= MAX_LEN:
+            return [x]
+
+        keyword, *words = x.split()
+        word_lengths = np.array([len(w) for w in words]) + 1
+        message_index = np.cumsum(word_lengths) // (MAX_LEN - len(keyword) - 1)
+        break_points = np.diff(message_index)
+        break_indices = np.where(break_points)[0] + 1
+        adjacent_breaks = zip([0, *break_indices], [*break_indices, len(words)])
+
+        return [" ".join(I.chain([keyword], words[i:j]))
+                for i, j in adjacent_breaks]
+
+    return line_list_to_messages(I.chain(*map(split, output_lines)))
