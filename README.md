@@ -29,7 +29,7 @@ Discord bot for personal server.
     }
     ```
 
-    where `your_token_here` comes from the Bot section of your discord app (Settings > Bot).
+    where `your_token_here` comes from the Bot section of your discord bot project (Settings > Bot).
 
 3) Create blank database by running: `sqlite3 iris.db "VACUUM;"`
 4) Run `alembic upgrade head`
