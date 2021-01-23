@@ -191,4 +191,4 @@ def e4d(db_session, message, *input_words):
     matches = [utils.e4d.match_abbr(abbr) if abbr else None
                for abbr in parsed_abbrs]
     output_lines = starmap(utils.e4d.to_output_line, zip(input_words, matches))
-    return ["\n".join(output_lines)]
+    return utils.e4d.to_output_messages(output_lines)
