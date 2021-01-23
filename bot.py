@@ -65,8 +65,11 @@ async def on_message(message):
     # if message is a command, we want to do something with it
     if message.content.lower().startswith('iris ') or (message.content.startswith('!') and not message.content.startswith('!!') and not message.content.startswith('! ') and not (message.content.endswith('!') and message.content.startswith('!'))) or message.content.startswith(f'<@!{client.user.id}> '):
         reply = process_commands(db_session, message)
-        if not reply == '':
-            await message.channel.send(reply)
+        if reply != '':
+            if isinstance(reply, str):
+                reply = [reply]
+            for r in reply:
+                await message.channel.send(r)
     # otherwise, it might contain karma so we should parse it for karma
     else:
         changes = karma_parse(message)

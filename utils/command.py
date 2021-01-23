@@ -1,4 +1,4 @@
-import discord
+from collections.abc import Iterable
 from models import Command, User
 import commands
 from inspect import getmembers, isfunction
@@ -109,18 +109,18 @@ def process_commands(db_session, message):
 
         # get highest placeholder num in args
 
-        for idx,o in enumerate(outputs):
+        for idx, o in enumerate(outputs):
+            if isinstance(o, Iterable) and not isinstance(o, str):
+                o = "\n".join(o)
+
             pos_string = '<'+str(idx+1)+'>'
-            if not pos_string in args:
+            if pos_string not in args:
                 args.append(o)
             else:
-                indices = [idx for idx,x in enumerate(args) if x == pos_string]
+                indices = [idx for idx, x in enumerate(args) if x == pos_string]
                 for ind in indices:
                     args[ind] = o
 
-        reply = func(db_session,message,*args)
-        for r in reply:
-            outputs.append(r)
-
+        reply = func(db_session, message, *args)
+        outputs.extend(reply)
     return outputs[-1]
-
