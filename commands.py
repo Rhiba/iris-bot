@@ -181,6 +181,6 @@ def uplift(db_session, message, *args):
 def poem(db_session, message, *args):
    for author in poems:
         if author == args:
-           return poems[author]
+           return ['yup!']
 
     
