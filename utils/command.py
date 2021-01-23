@@ -78,7 +78,7 @@ def process_commands(db_session, message):
                 if initial == 'alias':
                     return 'Alias can only be used as a standalone command.'
                 else:
-                    if not message.content.tolower().startswith('iris '):
+                    if not message.content.lower().startswith('iris '):
                         return f'Command not found: {initial}'
                     else:
                         return ''

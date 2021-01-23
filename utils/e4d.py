@@ -6,7 +6,7 @@ from typing import List, Optional
 Abbr = namedtuple("Abbr", "first_letter length last_letter")
 
 try:
-    with open("/usr/share/dict/words") as words_file:
+    with open("/usr/share/dict/british-english-insane") as words_file:
         SYSTEM_WORDS_LIST = [line.strip() for line in words_file]
 except FileNotFoundError:
     logging.getLogger("e4d").warning(
