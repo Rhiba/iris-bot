@@ -1,13 +1,19 @@
+import itertools as I
 import logging
+import random
 from collections import namedtuple
 from functools import reduce
-from itertools import starmap
 from typing import List, Optional
 
+import numpy as np
+
+__all__ = ["e4d", "e5d"]
+
 Abbr = namedtuple("Abbr", "first_letter length last_letter")
+MAX_LEN = 2000
 
 try:
-    with open("/usr/share/dict/words") as words_file:
+    with open("/usr/share/dict/british-english-insane") as words_file:
         SYSTEM_WORDS_LIST = [line.strip() for line in words_file]
 except FileNotFoundError:
     logging.getLogger("e4d").warning(
@@ -30,7 +36,8 @@ def match_abbr(abbr: Abbr) -> List[str]:
     return [w for w in SYSTEM_WORDS_LIST
             if w[0].lower() == abbr.first_letter
             and w[-1].lower() == abbr.last_letter
-            and len(w) == abbr.length + 2]
+            and len(w) == abbr.length + 2
+            and "'" not in w]
 
 
 def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
@@ -43,9 +50,9 @@ def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
     return f"**{input_word}**: {result_str}"
 
 
-def to_output_messages(output_lines: List[str]) -> List[str]:
+def line_list_to_messages(output_lines: List[str]) -> List[str]:
     def combine(a: List[str], x: str):
-        if not a or len(a[-1]) + len(x) > 2000 - 1:
+        if not a or len(a[-1]) + len(x) + 1 > MAX_LEN:
             a.append(x)
         else:
             a[-1] = a[-1] + f"\n{x}"
@@ -54,6 +61,24 @@ def to_output_messages(output_lines: List[str]) -> List[str]:
     if len(messages) == 1:
         return messages
     return [messages]
+
+
+def to_output_messages(output_lines: List[str]) -> List[str]:
+    def split(x: str) -> [str]:
+        if len(x) <= MAX_LEN:
+            return [x]
+
+        keyword, *words = x.split()
+        word_lengths = np.array([len(w) for w in words]) + 1
+        message_index = np.cumsum(word_lengths) // (MAX_LEN - len(keyword) - 1)
+        break_points = np.diff(message_index)
+        break_indices = np.where(break_points)[0] + 1
+        adjacent_breaks = zip([0, *break_indices], [*break_indices, len(words)])
+
+        return [" ".join(I.chain([keyword], words[i:j]))
+                for i, j in adjacent_breaks]
+
+    return line_list_to_messages(I.chain(*map(split, output_lines)))
 
 
 def e4d(db_session, message, *input_words):
@@ -65,5 +90,23 @@ def e4d(db_session, message, *input_words):
     parsed_abbrs = map(parse_abbr, input_words)
     matches = [match_abbr(abbr) if abbr else None
                for abbr in parsed_abbrs]
-    output_lines = starmap(to_output_line, zip(input_words, matches))
+    choices = map(random.choice, matches)
+    if len(input_words) == 1:
+        return [next(choices)]
+
+    choices = map(lambda x: [x], choices)
+    output_lines = I.starmap(to_output_line, zip(input_words, choices))
+    return to_output_messages(output_lines)
+
+
+def e5d(db_session, message, *input_words):
+    if SYSTEM_WORDS_LIST is None:
+        return ["<e5d disabled>"]
+    if not input_words:
+        return ["Example usage:\n\t!e5d i18n\n\t!e5d i18n a11y"]
+
+    parsed_abbrs = map(parse_abbr, input_words)
+    matches = [match_abbr(abbr) if abbr else None
+               for abbr in parsed_abbrs]
+    output_lines = I.starmap(to_output_line, zip(input_words, matches))
     return to_output_messages(output_lines)
