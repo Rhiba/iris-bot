@@ -1,11 +1,11 @@
-import os
-import discord
 import re
-from models import User, Karma, KarmaChange
-from sqlalchemy import desc
 from datetime import datetime, timedelta
 
-from creds import CREDS
+from sqlalchemy import desc
+
+from ..models import User, Karma, KarmaChange
+from ..creds import CREDS
+
 
 def filter_codeblocks(content):
     filtering = False
@@ -33,6 +33,7 @@ def filter_codeblocks(content):
 
     return output
 
+
 def filter_inlinecode(content):
     filtering = False
     remove_indices = []
@@ -58,6 +59,7 @@ def filter_inlinecode(content):
         output += content[prev:]
 
     return output
+
 
 def karma_parse(message):
     karma_regex = re.compile(r'(((("|\')(.+)(\4)|([^ \n]+))(\+\+|\+\-|\-\+|\-\-)( )?)+)(\(.*\)|(because|for)([^;\n]*?(?=( (("|\').+(\15)|[^ \n]+)(\+\+|\+\-|\-\+|\-\-))|[;\n]|$)))?')
@@ -94,6 +96,7 @@ def karma_parse(message):
             karma_changes.append((name,change,reason))
 
     return karma_changes
+
 
 def karma_change(db_session, client, uid, changes):
     # get user from db
@@ -175,7 +178,8 @@ def karma_change(db_session, client, uid, changes):
         n_item_plural = 's'
     else:
         n_item_plural = ''
-    
+
+
     reply = ""
     if len(changed) > 0:
         reply += f"I have made changes to the following item{ch_item_plural}:\n"
@@ -189,5 +193,3 @@ def karma_change(db_session, client, uid, changes):
             reply += f" • **{c}**\n"
 
     return reply.rstrip()
-
-

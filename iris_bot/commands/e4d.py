@@ -1,12 +1,13 @@
 import logging
 from collections import namedtuple
 from functools import reduce
+from itertools import starmap
 from typing import List, Optional
 
 Abbr = namedtuple("Abbr", "first_letter length last_letter")
 
 try:
-    with open("/usr/share/dict/british-english-insane") as words_file:
+    with open("/usr/share/dict/words") as words_file:
         SYSTEM_WORDS_LIST = [line.strip() for line in words_file]
 except FileNotFoundError:
     logging.getLogger("e4d").warning(
@@ -53,3 +54,16 @@ def to_output_messages(output_lines: List[str]) -> List[str]:
     if len(messages) == 1:
         return messages
     return [messages]
+
+
+def e4d(db_session, message, *input_words):
+    if SYSTEM_WORDS_LIST is None:
+        return ["<e4d disabled>"]
+    if not input_words:
+        return ["Example usage:\n\t!e4d i18n\n\t!e4d i18n a11y"]
+
+    parsed_abbrs = map(parse_abbr, input_words)
+    matches = [match_abbr(abbr) if abbr else None
+               for abbr in parsed_abbrs]
+    output_lines = starmap(to_output_line, zip(input_words, matches))
+    return to_output_messages(output_lines)

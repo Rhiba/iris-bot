@@ -1,8 +1,9 @@
-from collections.abc import Iterable
-from models import Command, User
-import commands
-from inspect import getmembers, isfunction
 import re
+from collections.abc import Iterable
+from inspect import getmembers, isfunction
+
+from .. import commands
+from ..models import Command, User
 
 functions_list = getmembers(commands, isfunction)
 function_names = [o[0] for o in functions_list]
