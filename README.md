@@ -18,7 +18,7 @@ Discord bot for personal server.
 ## Setup
 
 1) Create a discord bot project on the discord website.
-2) Create a new python file called `creds.py` with the following format:
+2) Create a new python file called `iris_bot/creds.py` with the following format:
 
     ```python
     CREDS = {
@@ -43,3 +43,11 @@ Discord bot for personal server.
     where `<USER_ID>` is your discord integer id. You can find this by
     enabling developer mode (User Settings > Appearance), then clicking on your
     user in Discord and selecting "Copy ID".
+
+## Running
+
+From the repository root, run
+
+```
+python -m iris_bot
+```
