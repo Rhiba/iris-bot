@@ -1,13 +1,17 @@
-from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
-from sqlalchemy import desc
-import random
 import dateutil
+import random
 import re
+from itertools import starmap
+
+from sqlalchemy import desc
+
+import utils.e4d
+from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
 from utils.quotes import quotes
 import yaml
     
 def gym_notify(db_session, message, *args):
-    if not len(args) == 2: 
+    if not len(args) == 2:
         print('Wrong number of arguments.')
     class_name = args[0]
     class_time = args[1]
@@ -30,7 +34,7 @@ def roll(db_session, message, *args):
     pos = args[0].find('d')
     if pos == -1:
         return ['!roll <x>d<y> <opt> - roll a y sided die x times (optionally take the high or sum)']
-        
+
     if random.randint(0, 100) == 0:
         return ['NUMBERWANG']
 
@@ -64,7 +68,7 @@ def widen(db_session, message, *args):
             for c in a.upper():
                 reply += c + " "
         return [reply]
-    else:    
+    else:
         return ['No item provided.']
 
 def contract(db_session, message, *args):
@@ -73,7 +77,7 @@ def contract(db_session, message, *args):
         reply += str(len(args[0][1:-1]))
         reply += args[0][-1]
         return [reply]
-    else:    
+    else:
         return ['Exactly one item please.']
 
 def karma(db_session, message, *args):
@@ -142,7 +146,7 @@ def remindme(db_session, message, *args):
         if not time == None:
             date_str += time
         date_str = date_str.strip()
-        
+
         valid_date = None
         try:
             valid_date = dateutil.parser.parse(date_str,dayfirst=True)
@@ -223,3 +227,33 @@ def addpoem(db_session, message, *args):
     
 
 
+
+def e4d(db_session, message, *input_words):
+    if utils.e4d.SYSTEM_WORDS_LIST is None:
+        return ["<e4d disabled>"]
+    if not input_words:
+        return ["Example usage:\n\t!e4d i18n\n\t!e4d i18n a11y"]
+
+    parsed_abbrs = map(utils.e4d.parse_abbr, input_words)
+    matches = [utils.e4d.match_abbr(abbr) if abbr else None
+               for abbr in parsed_abbrs]
+    choices = map(random.choice, matches)
+    if len(input_words) == 1:
+        return [next(choices)]
+
+    choices = map(lambda x: [x], choices)
+    output_lines = starmap(utils.e4d.to_output_line, zip(input_words, choices))
+    return utils.e4d.to_output_messages(output_lines)
+
+
+def e5d(db_session, message, *input_words):
+    if utils.e4d.SYSTEM_WORDS_LIST is None:
+        return ["<e5d disabled>"]
+    if not input_words:
+        return ["Example usage:\n\t!e5d i18n\n\t!e5d i18n a11y"]
+
+    parsed_abbrs = map(utils.e4d.parse_abbr, input_words)
+    matches = [utils.e4d.match_abbr(abbr) if abbr else None
+               for abbr in parsed_abbrs]
+    output_lines = starmap(utils.e4d.to_output_line, zip(input_words, matches))
+    return utils.e4d.to_output_messages(output_lines)

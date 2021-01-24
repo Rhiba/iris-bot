@@ -1,4 +1,4 @@
-import discord
+from collections.abc import Iterable
 from models import Command, User
 import commands
 from inspect import getmembers, isfunction
@@ -7,7 +7,22 @@ import re
 functions_list = [o for o in getmembers(commands) if isfunction(o[1])]
 function_names = [o[0] for o in functions_list]
 
-def process_commands(db_session, message):
+
+def is_non_str_iterable(x):
+    return isinstance(x, Iterable) and not isinstance(x, str)
+
+
+def truncate_message(msg, length=2000):
+    """ Limit message length and add truncation notice """
+    truncation_message = " *<truncated due to length>*"
+    MAX_LEN = 2000
+    if len(msg) > MAX_LEN:
+        truncation_point = MAX_LEN - len(truncation_message)
+        return msg[:truncation_point] + truncation_message
+    return msg
+
+
+def process_commands(db_session,  client, message):
     user = db_session.query(User).filter(User.uid == message.author.id).first()
     # here we want to split the commands up by pipes
     # we also want to pull commands from the hard coded ones, or the composite commands in the Command table (that are user defined)
@@ -60,14 +75,15 @@ def process_commands(db_session, message):
             idx += 1
         else:
             db_entry = db_session.query(Command).filter(Command.name == initial).one_or_none()
-            if db_entry == None:
+            if db_entry is None:
                 if initial == 'alias':
                     return 'Alias can only be used as a standalone command.'
-                else:
-                    if not message.content.tolower().startswith('iris '):
-                        return f'Command not found: {initial}'
-                    else:
-                        return ''
+
+                bot_username = client.user.name.lower()
+                mg = message.content.lower()
+                if mg.startswith('iris ') or mg.startswith(f"<@!{client.user.id}> ") or mg.startswith(bot_username+' '):
+                    return ''
+                return f'Command not found: {initial}'
 
             command_string = db_entry.command_string
             new_command = command_string
@@ -109,18 +125,25 @@ def process_commands(db_session, message):
 
         # get highest placeholder num in args
 
-        for idx,o in enumerate(outputs):
+        for idx, o in enumerate(outputs):
+            if is_non_str_iterable(o):
+                o = "\n".join(o)
+
             pos_string = '<'+str(idx+1)+'>'
-            if not pos_string in args:
+            if pos_string not in args:
                 args.append(o)
             else:
-                indices = [idx for idx,x in enumerate(args) if x == pos_string]
+                indices = [idx for idx, x in enumerate(args) if x == pos_string]
                 for ind in indices:
                     args[ind] = o
 
-        reply = func(db_session,message,*args)
-        for r in reply:
-            outputs.append(r)
+        reply = func(db_session, message, *args)
+        outputs.extend(reply)
 
-    return outputs[-1]
+    output_message = outputs[-1]
+    if is_non_str_iterable(output_message):
+        output_message = [truncate_message(m) for m in output_message]
+    else:
+        output_message = truncate_message(output_message)
+    return output_message
 

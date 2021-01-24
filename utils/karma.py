@@ -129,8 +129,8 @@ def karma_change(db_session, client, uid, changes):
 
         if last_change:
             time_delta = datetime.utcnow() - last_change.changed_at
-            if time_delta >= timedelta(seconds=CREDS['KARMA_TIMEOUT_S']):
-                # enough time has passed
+            if time_delta >= timedelta(seconds=CREDS['KARMA_TIMEOUT_S']) or karma_name == 'sara':
+                # enough time has passed or its fuckin sara--
                 karma_change = KarmaChange(
                     karma_id=karma_item.id,
                     user_id=user.id,
