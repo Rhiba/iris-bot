@@ -37,6 +37,11 @@ def match_abbr(abbr: Abbr) -> List[str]:
             and "'" not in w]
 
 
+def get_matches(input_words: List[str]) -> List[Optional[List[str]]]:
+    parsed_abbrs = map(parse_abbr, input_words)
+    return [match_abbr(abbr) if abbr else None for abbr in parsed_abbrs]
+
+
 def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
     if matches is None:
         result_str = "<Invalid input>"
