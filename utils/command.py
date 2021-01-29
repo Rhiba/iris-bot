@@ -118,9 +118,8 @@ def process_commands(db_session,  client, message):
     # input placeholders given by <1> <2> etc, if none given, assume output of previous command goes to final input(s) of next command
     outputs = []
     for command in commands:
-        command_name = command.split(' ')[0]
+        command_name, *args = command.split(' ')
         func = [o[1] for o in functions_list if o[0] == command_name][0]
-        args = command.split(' ')[1:]
         args = [a.strip() for a in args]
 
         # get highest placeholder num in args
@@ -131,11 +130,11 @@ def process_commands(db_session,  client, message):
 
             pos_string = f'<{idx+1}>'
             if pos_string not in args:
-                args.extend(o.split())
+                args.extend(o.split(" "))
             else:
                 indices = [idx for idx, x in enumerate(args) if x == pos_string]
                 for ind in indices:
-                    args = args[:ind] + o.split() + args[ind+1:]
+                    args = args[:ind] + o.split(" ") + args[ind+1:]
         reply = func(db_session, message, *args)
         outputs.extend(reply)
 
