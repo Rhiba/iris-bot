@@ -119,17 +119,17 @@ def process_commands(db_session,  client, message):
     # an outputs list. After all commands are processed, iris takes the final
     # output in the outputs list to be the response message.
     #
-    # When piping, the default behaviour is to pass the last
-    # output from previous commands to the next command.
-    # When output is passed, it is first first split into a list of words; the
-    # words are then appended to the argument list for the next command.
+    # When piping, the default behaviour is to pass the last output from
+    # previous commands to the next command. When an output is passed, it is
+    # first split into a list of words; the words are then appended to the
+    # argument list for the next command.
     #
     # Commands can contain input placeholders of the form <1> <2>, etc.
-    # These placeholders index the outputs (starting from 1).
+    # These placeholders index the outputs list (starting from 1).
     # Outputs named in this way are not concatenated to the arguments list, but
-    # instead inserted in place of their placeholder.
+    # instead substituted for their placeholder.
     #
-    # When placeholders are provided, outputs which are not named are not
+    # When any placeholders are provided, outputs which are not named are not
     # concatenated to the argument list.
     #
     # The outputs list is maintained throughout execution, and so subsequent
