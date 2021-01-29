@@ -146,7 +146,7 @@ def process_commands(db_session,  client, message):
                                               for arg in args)
             if match}
 
-        def process_output(o):
+        def pipe_output(o):
             if is_non_str_iterable(o):
                 # If output is iterable, but not a str, we assume it is a list
                 # of str intended to be split into messages, and join them.
@@ -159,9 +159,9 @@ def process_commands(db_session,  client, message):
                     output = outputs[output_index]
                 except IndexError:
                     continue
-                args = args[:arg_index] + process_output(output) + args[arg_index+1:]
+                args = args[:arg_index] + pipe_output(output) + args[arg_index+1:]
         elif outputs:
-            args += process_output(outputs[-1])
+            args += pipe_output(outputs[-1])
 
         reply = func(db_session, message, *args)
         outputs.extend(reply)
