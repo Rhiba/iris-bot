@@ -13,6 +13,7 @@ Discord bot for personal server.
 * `sqlalchemy`
 * `sqlalchemy_utils`
 * `alembic`
+* `numpy`
 * `pytz`
 
 ## Setup

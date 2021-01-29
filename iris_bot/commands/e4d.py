@@ -40,6 +40,11 @@ def match_abbr(abbr: Abbr) -> List[str]:
             and "'" not in w]
 
 
+def get_matches(input_words: List[str]) -> List[Optional[List[str]]]:
+    parsed_abbrs = map(parse_abbr, input_words)
+    return [match_abbr(abbr) if abbr else None for abbr in parsed_abbrs]
+
+
 def to_output_line(input_word: str, matches: Optional[List[str]]) -> str:
     if matches is None:
         result_str = "<Invalid input>"
@@ -87,16 +92,11 @@ def e4d(db_session, message, *input_words):
     if not input_words:
         return ["Example usage:\n\t!e4d i18n\n\t!e4d i18n a11y"]
 
-    parsed_abbrs = map(parse_abbr, input_words)
-    matches = [match_abbr(abbr) if abbr else None
-               for abbr in parsed_abbrs]
-    choices = map(random.choice, matches)
-    if len(input_words) == 1:
-        return [next(choices)]
-
-    choices = map(lambda x: [x], choices)
-    output_lines = I.starmap(to_output_line, zip(input_words, choices))
-    return to_output_messages(output_lines)
+    return [" ".join([
+        random.choice(matches)
+        for matches in get_matches(input_words)
+        if matches
+    ])]
 
 
 def e5d(db_session, message, *input_words):
@@ -105,8 +105,6 @@ def e5d(db_session, message, *input_words):
     if not input_words:
         return ["Example usage:\n\t!e5d i18n\n\t!e5d i18n a11y"]
 
-    parsed_abbrs = map(parse_abbr, input_words)
-    matches = [match_abbr(abbr) if abbr else None
-               for abbr in parsed_abbrs]
+    matches = get_matches(input_words)
     output_lines = I.starmap(to_output_line, zip(input_words, matches))
     return to_output_messages(output_lines)
