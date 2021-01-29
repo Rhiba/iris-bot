@@ -115,9 +115,9 @@ def process_commands(db_session,  client, message):
             new_commands = new_command.split('|')
             commands = commands[:idx] + new_commands + commands[idx:]
 
-    # Each command can have zero or more outputs - usually strings to be output
-    # by iris as messages. At the end of command processing, the final output
-    # is
+    # Each command can have zero or more outputs. These outputs are stored in
+    # an outputs list. After all commands are processed, iris takes the final
+    # output in the outputs list to be the response message.
     #
     # When piping, the default behaviour is to pass the last
     # output from previous commands to the next command.
