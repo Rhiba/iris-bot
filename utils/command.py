@@ -119,39 +119,50 @@ def process_commands(db_session,  client, message):
     # by iris as messages. At the end of command processing, the final output
     # is
     #
-    # When piping, every output from the previous command is split back into
-    # words. Then, the default behaviour is to concatenate the split words to
-    # the arguments given to the next command
-    #
-    # The outputs list is maintained throughout execution, and so subsequent
-    # commands receive all outputs from all prior commands.
+    # When piping, the default behaviour is to pass the last
+    # output from previous commands to the next command.
+    # When output is passed, it is first first split into a list of words; the
+    # words are then appended to the argument list for the next command.
     #
     # Commands can contain input placeholders of the form <1> <2>, etc.
-    # In this case, they index the list of outputs (1-based indexing).
+    # These placeholders index the outputs (starting from 1).
     # Outputs named in this way are not concatenated to the arguments list, but
-    # instead take the place of their placeholder. However, outputs not named
-    # will be concatenated as usual
+    # instead inserted in place of their placeholder.
+    #
+    # When placeholders are provided, outputs which are not named are not
+    # concatenated to the argument list.
+    #
+    # The outputs list is maintained throughout execution, and so subsequent
+    # commands can access all outputs from all prior commands.
     outputs = []
     for command in commands:
         command_name, *args = command.split(' ')
         func = [o[1] for o in functions_list if o[0] == command_name][0]
         args = [a.strip() for a in args]
 
-        # TODO: Get highest placeholder num in args
+        placeholders = {
+            arg_index: int(match[1]) - 1
+            for arg_index, match in enumerate(re.fullmatch(r'<(\d+)>', arg)
+                                              for arg in args)
+            if match}
 
-        for idx, o in enumerate(outputs):
+        def process_output(o):
             if is_non_str_iterable(o):
                 # If output is iterable, but not a str, we assume it is a list
                 # of str intended to be split into messages, and join them.
                 o = "\n".join(o)
+            return o.split(" ")
 
-            pos_string = f'<{idx+1}>'
-            if pos_string not in args:
-                args.extend(o.split(" "))
-            else:
-                indices = [idx for idx, x in enumerate(args) if x == pos_string]
-                for ind in indices:
-                    args = args[:ind] + o.split(" ") + args[ind+1:]
+        if placeholders:
+            for arg_index, output_index in reversed(placeholders.items()):
+                try:
+                    output = outputs[output_index]
+                except IndexError:
+                    continue
+                args = args[:arg_index] + process_output(output) + args[arg_index+1:]
+        elif outputs:
+            args += process_output(outputs[-1])
+
         reply = func(db_session, message, *args)
         outputs.extend(reply)
 
@@ -161,4 +172,3 @@ def process_commands(db_session,  client, message):
     else:
         output_message = truncate_message(output_message)
     return output_message
-
