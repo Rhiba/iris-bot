@@ -4,3 +4,4 @@ sqlalchemy_utils
 alembic
 pytz
 numpy
+pyyaml>=5.1

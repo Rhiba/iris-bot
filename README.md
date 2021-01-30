@@ -15,6 +15,7 @@ Discord bot for personal server.
 * `alembic`
 * `numpy`
 * `pytz`
+* `pyyaml>=5.1`
 
 ## Setup
 
