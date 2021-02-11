@@ -129,14 +129,13 @@ def process_commands(db_session,  client, message):
             if is_non_str_iterable(o):
                 o = "\n".join(o)
 
-            pos_string = '<'+str(idx+1)+'>'
+            pos_string = f'<{idx+1}>'
             if pos_string not in args:
-                args.append(o)
+                args.extend(o.split())
             else:
                 indices = [idx for idx, x in enumerate(args) if x == pos_string]
                 for ind in indices:
-                    args[ind] = o
-
+                    args = args[:ind] + o.split() + args[ind+1:]
         reply = func(db_session, message, *args)
         outputs.extend(reply)
 
