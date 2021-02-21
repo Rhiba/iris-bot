@@ -9,6 +9,7 @@ import utils.e4d
 from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
 from utils.quotes import quotes
 import yaml
+import utils.randomperks
     
 def gym_notify(db_session, message, *args):
     if not len(args) == 2:
@@ -255,3 +256,13 @@ def e5d(db_session, message, *input_words):
     matches = utils.e4d.get_matches(input_words)
     output_lines = starmap(utils.e4d.to_output_line, zip(input_words, matches))
     return utils.e4d.to_output_messages(output_lines)
+
+def randomperks(db_sesson, message, *args):
+    try:
+        if not args:
+             raise Exception("Use !randomperks killer or !randomperks survivor")
+        else:
+            return utils.randomperks.get_perks(args[0])
+    except Exception as e:
+        print("exception")
+        return [str(e)]
