@@ -9,6 +9,7 @@ import utils.e4d
 from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
 from utils.quotes import quotes
 import yaml
+import inspect
     
 def gym_notify(db_session, message, *args):
     if not len(args) == 2:
@@ -186,6 +187,8 @@ def timer(db_session, message, *args):
 def uplift(db_session, message, *args):
     x = random.choice(quotes)
     return [x]
+uplift.help = 'Iris prints a random motivational quote from a database. No arguments needed'
+
 
 def poem(db_session, message, *args):
     with open('data/poems.yaml') as f:
@@ -204,6 +207,7 @@ def poem(db_session, message, *args):
         return [poem_name + "\n\n" + poem]
     if author not in data:
         return ["Sorry, I don't have any poems by that author. Why not add a poem using !addpoem?"]
+poem.help = "Takes author's name as an argument and returns a random poem from that author if they are in the database. If no argument given, Iris prints a random poem from a database."
 
 def printpoems(db_session, message, *args):
     with open('data/poems.yaml') as f:
@@ -229,9 +233,8 @@ def addpoem(db_session, message, *args):
     with open('data/poems.yaml', 'w') as f:
         yaml.dump(data, f)
     return ['I have added your poem to my database']
+addpoem.help = "Adds a poem to the database. Takes 3 arguments in this sequence: author, title, poem"
     
-
-
 
 def e4d(db_session, message, *input_words):
     if utils.e4d.SYSTEM_WORDS_LIST is None:
@@ -239,12 +242,26 @@ def e4d(db_session, message, *input_words):
     if not input_words:
         return ["Example usage:\n\t!e4d i18n\n\t!e4d i18n a11y"]
 
+<<<<<<< Updated upstream
     return [" ".join([
         random.choice(matches)
         for matches in utils.e4d.get_matches(input_words)
         if matches
     ])]
 
+=======
+    parsed_abbrs = map(utils.e4d.parse_abbr, input_words)
+    matches = [utils.e4d.match_abbr(abbr) if abbr else None
+               for abbr in parsed_abbrs]
+    choices = map(random.choice, matches)
+    if len(input_words) == 1:
+        return [next(choices)]
+
+    choices = map(lambda x: [x], choices)
+    output_lines = starmap(utils.e4d.to_output_line, zip(input_words, choices))
+    return utils.e4d.to_output_messages(output_lines)
+e4d.help="Some weird ass function Jamie wrote. Takes a word and wizzes it up"
+>>>>>>> Stashed changes
 
 def e5d(db_session, message, *input_words):
     if utils.e4d.SYSTEM_WORDS_LIST is None:
@@ -255,3 +272,18 @@ def e5d(db_session, message, *input_words):
     matches = utils.e4d.get_matches(input_words)
     output_lines = starmap(utils.e4d.to_output_line, zip(input_words, matches))
     return utils.e4d.to_output_messages(output_lines)
+
+def help(db_session, message, *args):
+    #if a command is given as an arg, help retrieves instruction on that command
+    args = " ".join(args)
+    commands = {name: func for name, func in globals().items() if inspect.isfunction(func)}
+    if hasattr(commands[args], "help"):
+        help_msg = commands[args].__getattribute__("help")
+        return [help_msg]
+    #if no args given, print out the help of all of the commands
+    #if command doesn't exist, respond 'lol'
+    
+ 
+
+
+
