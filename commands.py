@@ -10,6 +10,7 @@ from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
 from utils.quotes import quotes
 import inspect
 import yaml
+import utils.randomperks
     
 def gym_notify(db_session, message, *args):
     if not len(args) == 2:
@@ -283,9 +284,12 @@ def help(db_session, message, *args):
     return ['Wish I could help you mate']
 help.help = "Takes a command as an argument and gives you information on how to use it"
 
-
-    
- 
-
-
-
+def randomperks(db_sesson, message, *args):
+    try:
+        if not args:
+             raise Exception("Use !randomperks killer or !randomperks survivor")
+        else:
+            return utils.randomperks.get_perks(args[0])
+    except Exception as e:
+        print("exception")
+        return [str(e)]
