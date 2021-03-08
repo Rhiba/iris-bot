@@ -1,4 +1,10 @@
-#Defining quotes
+import random
+
+
+def uplift(db_session, message, *args):
+    x = random.choice(quotes)
+    return [x]
+
 quotes = ['It is possible to commit no mistakes and still lose... \nThat is not weakness, that is life!!!',
 
  'Prioritise *your* needs, \nmake room for it, \ntell other people about it.', 

@@ -1,11 +1,16 @@
-from collections.abc import Iterable
-from models import Command, User
-import commands
-from inspect import getmembers, isfunction
+import logging
 import re
+from collections.abc import Iterable
+from inspect import getmembers, isfunction
 
-functions_list = [o for o in getmembers(commands) if isfunction(o[1])]
+from .. import commands
+from ..models import Command, User
+
+functions_list = getmembers(commands, isfunction)
 function_names = [o[0] for o in functions_list]
+
+logging.basicConfig(level=logging.INFO)
+logging.info(f"Loaded iris with commands {function_names}")
 
 
 def is_non_str_iterable(x):

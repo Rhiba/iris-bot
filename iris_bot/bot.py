@@ -1,30 +1,29 @@
 import asyncio
 import datetime
-import os
-from collections.abc import Iterable
 
 import discord
-import json
 
-from creds import CREDS
-from models import db_session, User, Reminder
-from utils.command import process_commands
-from utils.gym import check_for_classes
-from utils.karma import karma_parse, karma_change
+from .creds import CREDS
+from .models import db_session, User, Reminder
+from .utils.command import process_commands
+from .utils.gym import check_for_classes
+from .utils.karma import karma_parse, karma_change
 
 token = CREDS['DISCORD_TOKEN']
 
 client = discord.Client()
+
 
 async def gym_check():
     await client.wait_until_ready()
     exercise_channel_id = 600743628356190214
     channel = client.get_channel(exercise_channel_id)
     while not client.is_closed():
-        response = check_for_classes() 
+        response = check_for_classes()
         if not response == '':
             await channel.send(response)
         await asyncio.sleep(60)
+
 
 async def reminder_check():
     await client.wait_until_ready()
@@ -48,9 +47,11 @@ async def reminder_check():
         # TODO: make this granularity set-able
         await asyncio.sleep(10)
 
+
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
+
 
 @client.event
 async def on_message(message):

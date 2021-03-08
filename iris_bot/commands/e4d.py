@@ -1,10 +1,13 @@
 import itertools as I
 import logging
+import random
 from collections import namedtuple
 from functools import reduce
 from typing import List, Optional
 
 import numpy as np
+
+__all__ = ["e4d", "e5d"]
 
 Abbr = namedtuple("Abbr", "first_letter length last_letter")
 MAX_LEN = 2000
@@ -81,3 +84,27 @@ def to_output_messages(output_lines: List[str]) -> List[str]:
                 for i, j in adjacent_breaks]
 
     return line_list_to_messages(I.chain(*map(split, output_lines)))
+
+
+def e4d(db_session, message, *input_words):
+    if SYSTEM_WORDS_LIST is None:
+        return ["<e4d disabled>"]
+    if not input_words:
+        return ["Example usage:\n\t!e4d i18n\n\t!e4d i18n a11y"]
+
+    return [" ".join([
+        random.choice(matches)
+        for matches in get_matches(input_words)
+        if matches
+    ])]
+
+
+def e5d(db_session, message, *input_words):
+    if SYSTEM_WORDS_LIST is None:
+        return ["<e5d disabled>"]
+    if not input_words:
+        return ["Example usage:\n\t!e5d i18n\n\t!e5d i18n a11y"]
+
+    matches = get_matches(input_words)
+    output_lines = I.starmap(to_output_line, zip(input_words, matches))
+    return to_output_messages(output_lines)

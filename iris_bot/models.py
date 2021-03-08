@@ -7,7 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Session, relationship
 from sqlalchemy_utils import EncryptedType, ScalarListType
 
-from creds import CREDS
+from .creds import CREDS
 
 Base = declarative_base()
 
