@@ -1,0 +1,13 @@
+name: iris-bot
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - discord.py
+  - sqlalchemy
+  - alembic
+  - pytz
+  - pyyaml
+  - pip
+  - pip:
+    - sqlalchemy_utils
