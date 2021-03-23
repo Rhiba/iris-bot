@@ -6,7 +6,7 @@ quotes = ['It is possible to commit no mistakes and still lose... \nThat is not 
 "You don't have to be an expert to do anything. \nWhat matters is to dooooo it, in whatever form you can manage rn :muscle:", 
 
 'Set yourself clear goals for the day \nWhat small step can you take right now?', 
-'Caring for yourself is not self-indulgence, it is self-preservation \nand that is an act of political warfare.\n'
+'Caring for yourself is not self-indulgence, it is self-preservation \nand that is an act of political warfare.\n',
 "When you can't control what's happening, challenge yourself to control the way you respind. \nThat's where your powa is.",
 
 "Worrying doesn't take away tomorrow's troubles :( \nIt takes away today's peace",
@@ -43,4 +43,5 @@ quotes = ['It is possible to commit no mistakes and still lose... \nThat is not 
 "If things start happening, don't worry, don't stew, just go right along and you'll start happening too.",
 "I'm afraid that sometimes you'll play lonely games too. Games you can't win 'cause you'll play against you.",
 "ASAP. Whatever that means. It must mean, 'Act swiftly awesome pacyderm! \n:elephant:",
+"There’s a crack in everything that’s how the light gets in."
 ]

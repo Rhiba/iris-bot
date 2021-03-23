@@ -8,6 +8,7 @@ from sqlalchemy import desc
 import utils.e4d
 from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
 from utils.quotes import quotes
+import inspect
 import yaml
 import utils.randomperks
     
@@ -22,12 +23,14 @@ def say(db_session, message, *args):
     if len(args) == 0:
         return ['say wot mate?']
     return [' '.join(args)]
+say.help = 'Parrots back the argument as a reply' 
 
 def flip(db_session, message, *args):
     if len(args) == 0:
         return ["🖕"]
     result = random.randint(0, len(args)-1)
     return [args[result]]
+flip.help = 'Randomly returns one of the argument as a reply'
 
 def roll(db_session, message, *args):
     if len(args) != 1 and len(args) != 2:
@@ -180,13 +183,17 @@ def remindme(db_session, message, *args):
         db_session.add(reminder)
         db_session.commit()
         return ['Added reminder on ' + str(valid_date) + '.']
+    
 
 def timer(db_session, message, *args):
     return ['Not implemented.']
 
+
 def uplift(db_session, message, *args):
     x = random.choice(quotes)
     return [x]
+uplift.help = 'I print a random motivational quote from my database. No arguments needed'
+
 
 def poem(db_session, message, *args):
     with open('data/poems.yaml') as f:
@@ -205,16 +212,21 @@ def poem(db_session, message, *args):
         return [poem_name + "\n\n" + poem]
     if author not in data:
         return ["Sorry, I don't have any poems by that author. Why not add a poem using !addpoem?"]
+poem.help = "Give me the author's name as an argument and I'll recite a random poem from that author if they are in my database. If no argument is given, I'll print a random poem from my database."
 
 def printpoems(db_session, message, *args):
     with open('data/poems.yaml') as f:
         data = yaml.load(f, Loader=yaml.FullLoader) 
     #Post all poems by the specified author
     author = " ".join(args).lower()
-    for author in data: 
+    if author in data: 
         poems = data[author]
         poems_list = list(poems)
-        return ["Poems by " + author + " include: \n" + str(poems_list)]
+        return ["Poems by " + author + " include: \n" + str(poems_list)]    
+    if author not in data:
+        return ["I have no poems by that author in my database :( why not add a poem using !addpoem?"]
+printpoems.help = "Give me the author's name as an argument and I will recite to you all the poems by that author that are in my database"
+
 
 def addpoem(db_session, message, *args):
     with open('data/poems.yaml') as f:
@@ -222,6 +234,7 @@ def addpoem(db_session, message, *args):
     author, title, poem = " ".join(args).split(',', maxsplit=2)
     poem = poem.strip()
     #if author is already there
+    author = author.lower()
     if author in data:
         data[author][title] = poem
     #if author is not already there, create a new entry 
@@ -230,9 +243,8 @@ def addpoem(db_session, message, *args):
     with open('data/poems.yaml', 'w') as f:
         yaml.dump(data, f)
     return ['I have added your poem to my database']
+addpoem.help = "I add your poem to my database. I take 3 arguments in this sequence: author, title, poem"
     
-
-
 
 def e4d(db_session, message, *input_words):
     if utils.e4d.SYSTEM_WORDS_LIST is None:
@@ -245,7 +257,7 @@ def e4d(db_session, message, *input_words):
         for matches in utils.e4d.get_matches(input_words)
         if matches
     ])]
-
+e4d.help="Some weird ass function Jamie wrote. Takes a word and wizzes it up"
 
 def e5d(db_session, message, *input_words):
     if utils.e4d.SYSTEM_WORDS_LIST is None:
@@ -256,6 +268,21 @@ def e5d(db_session, message, *input_words):
     matches = utils.e4d.get_matches(input_words)
     output_lines = starmap(utils.e4d.to_output_line, zip(input_words, matches))
     return utils.e4d.to_output_messages(output_lines)
+e4d.help="I have no idea what Jamie has done, sorry"
+
+def help(db_session, message, *args):
+    #if a command is given as an arg, help retrieves instruction on that command
+    args = " ".join(args)
+    commands = {name: func for name, func in globals().items()}
+    if hasattr(commands.get(args), "help"):
+        help_msg = commands[args].help
+        return [help_msg]
+    #if no args given, print out the help of all of the commands
+    if len(args) == 0:
+        return ['The available commands are: \n' + "\n".join([name for name, function in commands.items() if hasattr(function, "help")])]
+    #if command doesn't exist
+    return ['Wish I could help you mate']
+help.help = "Takes a command as an argument and gives you information on how to use it"
 
 def randomperks(db_sesson, message, *args):
     try:
