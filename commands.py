@@ -341,7 +341,8 @@ def _botd_extract_discord_image(tweet: tweepy.models.Status) -> (str, io.BytesIO
 
 def botd(db, message, *_):
     tweets = _botd_get_bird_timeline(_botd_get_api())
-    if (latest_tweet := first_true(tweets, pred=_botd_contains_bird)) is None:
+    latest_tweet = first_true(tweets, pred=_botd_contains_bird)
+    if latest_tweet is None:
         return ["I couldn't find a bird image :("]
     return [_botd_extract_discord_image(latest_tweet)]
 
