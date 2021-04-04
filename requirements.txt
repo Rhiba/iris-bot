@@ -4,3 +4,5 @@ sqlalchemy_utils
 alembic
 pytz
 numpy
+more_itertools
+tweepy

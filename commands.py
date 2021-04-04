@@ -1,16 +1,29 @@
 import dateutil
+import io
+import pickle
 import random
 import re
+import os
+import urllib
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
 from itertools import starmap
+from pathlib import Path, PurePath
+from typing import Optional, Iterable
 
+import discord
+import tweepy
+import yaml
+from more_itertools import first_true
 from sqlalchemy import desc
 
 import utils.e4d
-from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
-from utils.quotes import quotes
-import yaml
 import utils.randomperks
-    
+from models import Karma, KarmaChange, GymNotification, GymToken, Reminder, User
+from utils.responses import FileResponse
+from utils.quotes import quotes
+
 def gym_notify(db_session, message, *args):
     if not len(args) == 2:
         print('Wrong number of arguments.')
@@ -230,8 +243,6 @@ def addpoem(db_session, message, *args):
     with open('data/poems.yaml', 'w') as f:
         yaml.dump(data, f)
     return ['I have added your poem to my database']
-    
-
 
 
 def e4d(db_session, message, *input_words):
@@ -266,3 +277,81 @@ def randomperks(db_sesson, message, *args):
     except Exception as e:
         print("exception")
         return [str(e)]
+
+
+BOTD_BIRD_USER = "todaysbird"
+
+
+def _botd_contains_bird(tweet: tweepy.models.Status) -> bool:
+    return (tweet.author.screen_name == BOTD_BIRD_USER
+            and not tweet.retweeted
+            and not tweet.is_quote_status
+            and "media" in tweet.entities
+            and tweet.entities["media"]
+            and tweet.entities["media"][0]["type"] == "photo"
+            and tweet.in_reply_to_status_id is None
+            and tweet.in_reply_to_status_id_str is None
+            and tweet.in_reply_to_user_id is None
+            and tweet.in_reply_to_user_id_str is None
+            and tweet.in_reply_to_screen_name is None)
+
+
+def _botd_get_bird_timeline(api, count=20) -> Iterable[tweepy.models.Status]:
+    user = api.get_user(BOTD_BIRD_USER)
+    return user.timeline(count=count, include_rts=False)
+
+
+def _botd_get_url_extension(url: str, default=".jpg") -> str:
+    ext = PurePath(urllib.parse.urlparse(url).path).suffix
+    return ext if ext else default
+
+
+def _botd_extract_image_url(tweet: tweepy.models.Status) -> str:
+    image_data = tweet.entities["media"][0]
+    return image_data["media_url_https"]
+
+
+def _botd_read_url_bytes(url: str) -> io.BytesIO:
+    with urllib.request.urlopen(url) as request:
+        # NOTE: Not sure if copy is necessary here. The HTTPRequest docs are
+        #       total garbo, but it doesn't seem to implement IOBase/IOBaseRaw
+        return io.BytesIO(request.read())
+
+
+def _botd_get_api() -> tweepy.API:
+    with Path("twitter_creds.txt").open("rb") as f:
+        creds = pickle.load(f)
+    auth = tweepy.AppAuthHandler(*creds.split())
+    return tweepy.API(auth)
+
+
+def _botd_extract_discord_image(tweet: tweepy.models.Status) -> (str, io.BytesIO):
+    image_url = _botd_extract_image_url(tweet)
+    image_extension = _botd_get_url_extension(image_url)
+    image_data = _botd_read_url_bytes(image_url)
+    # FIXME: This will break the piping if anyone ever tries to pipe it.
+    #        In general we need a more sophisticated return type for messages
+    #        to support this functionality.
+    # NOTE: Could possibly use an embed here, but I personally don't see them
+    #       and I think discord can take the hit.
+    return FileResponse(content="",
+                        file=discord.File(image_data,
+                                          filename=f"birb{image_extension}"))
+
+
+def botd(db, message, *_):
+    tweets = _botd_get_bird_timeline(_botd_get_api())
+    latest_tweet = first_true(tweets, pred=_botd_contains_bird)
+    if latest_tweet is None:
+        return ["I couldn't find a bird image :("]
+    return [_botd_extract_discord_image(latest_tweet)]
+
+
+def birb(db, message, *_):
+    tweets = _botd_get_bird_timeline(_botd_get_api(), count=100)
+    try:
+        random_tweet = random.choice([tweet for tweet in tweets
+                                      if _botd_contains_bird(tweet)])
+    except IndexError:
+        return ["I couldn't find a bird image :("]
+    return [_botd_extract_discord_image(random_tweet)]

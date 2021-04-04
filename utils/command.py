@@ -14,6 +14,8 @@ def is_non_str_iterable(x):
 
 def truncate_message(msg, length=2000):
     """ Limit message length and add truncation notice """
+    if not isinstance(msg, str):
+        return msg
     truncation_message = " *<truncated due to length>*"
     MAX_LEN = 2000
     if len(msg) > MAX_LEN:
@@ -145,4 +147,3 @@ def process_commands(db_session,  client, message):
     else:
         output_message = truncate_message(output_message)
     return output_message
-

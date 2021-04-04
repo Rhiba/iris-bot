@@ -11,6 +11,7 @@ from models import db_session, User, Reminder
 from utils.command import process_commands
 from utils.gym import check_for_classes
 from utils.karma import karma_parse, karma_change
+from utils.responses import FileResponse
 
 token = CREDS['DISCORD_TOKEN']
 
@@ -73,11 +74,14 @@ async def on_message(message):
                 and first_word != "!"
                 and first_word[1] not in '! ')):
         reply = process_commands(db_session, client, message)
-        if reply != '':
-            if isinstance(reply, str):
-                reply = [reply]
-            for r in reply:
-                await message.channel.send(r)
+        if isinstance(reply, FileResponse):
+            await message.channel.send(reply.content, file=reply.file)
+        elif isinstance(reply, str) and reply:
+            await message.channel.send(reply)
+        elif isinstance(reply, list):
+            for r in map(str, reply):
+                if r:
+                    await message.channel.send(r)
     # otherwise, it might contain karma so we should parse it for karma
     else:
         changes = karma_parse(message)
