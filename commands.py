@@ -7,10 +7,9 @@ import os
 import urllib
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
 from itertools import starmap
 from pathlib import Path, PurePath
-from typing import Optional, Iterable
+from typing import Iterable
 
 import discord
 import tweepy
@@ -279,11 +278,12 @@ def randomperks(db_sesson, message, *args):
         return [str(e)]
 
 
-BOTD_BIRD_USER = "todaysbird"
+BOTD_DAILY_BIRD_USER = "todaysbird"
+BOTD_BIRD_USERS = [BOTD_DAILY_BIRD_USER, "bird_not_exist"]
 
 
-def _botd_contains_bird(tweet: tweepy.models.Status) -> bool:
-    return (tweet.author.screen_name == BOTD_BIRD_USER
+def _botd_tweet_contains_image(tweet: tweepy.models.Status) -> bool:
+    return (tweet.author.screen_name in BOTD_BIRD_USERS
             and not tweet.retweeted
             and not tweet.is_quote_status
             and "media" in tweet.entities
@@ -296,8 +296,8 @@ def _botd_contains_bird(tweet: tweepy.models.Status) -> bool:
             and tweet.in_reply_to_screen_name is None)
 
 
-def _botd_get_bird_timeline(api, count=20) -> Iterable[tweepy.models.Status]:
-    user = api.get_user(BOTD_BIRD_USER)
+def _botd_get_timeline(api, username, count=20) -> Iterable[tweepy.models.Status]:
+    user = api.get_user(username)
     return user.timeline(count=count, include_rts=False)
 
 
@@ -336,22 +336,23 @@ def _botd_extract_discord_image(tweet: tweepy.models.Status) -> (str, io.BytesIO
     #       and I think discord can take the hit.
     return FileResponse(content="",
                         file=discord.File(image_data,
-                                          filename=f"birb{image_extension}"))
+                                          filename=f"image{image_extension}"))
 
 
 def botd(db, message, *_):
-    tweets = _botd_get_bird_timeline(_botd_get_api())
-    latest_tweet = first_true(tweets, pred=_botd_contains_bird)
+    tweets = _botd_get_timeline(_botd_get_api(), "todaysbird", user)
+    latest_tweet = first_true(tweets, pred=_botd_tweet_contains_image)
     if latest_tweet is None:
         return ["I couldn't find a bird image :("]
     return [_botd_extract_discord_image(latest_tweet)]
 
 
 def birb(db, message, *_):
-    tweets = _botd_get_bird_timeline(_botd_get_api(), count=100)
+    user = random.choice(BOTD_BIRD_USERS)
+    tweets = _botd_get_timeline(_botd_get_api(), user, count=100)
     try:
         random_tweet = random.choice([tweet for tweet in tweets
-                                      if _botd_contains_bird(tweet)])
+                                      if _botd_tweet_contains_image(tweet)])
     except IndexError:
         return ["I couldn't find a bird image :("]
     return [_botd_extract_discord_image(random_tweet)]
