@@ -1,9 +1,4 @@
-from dataclasses import dataclass
-
-import discord
+from collections import namedtuple
 
 
-@dataclass
-class FileResponse:
-    content: str
-    file: discord.File
+FileResponse = namedtuple("FileResponse", ["content", "file"])

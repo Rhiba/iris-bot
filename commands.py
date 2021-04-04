@@ -7,10 +7,9 @@ import os
 import urllib
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
 from itertools import starmap
 from pathlib import Path, PurePath
-from typing import Optional, Iterable
+from typing import Iterable
 
 import discord
 import tweepy
