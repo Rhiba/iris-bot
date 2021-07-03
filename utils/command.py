@@ -117,27 +117,43 @@ def process_commands(db_session,  client, message):
             new_commands = new_command.split('|')
             commands = commands[:idx] + new_commands + commands[idx:]
 
-    # input placeholders given by <1> <2> etc, if none given, assume output of previous command goes to final input(s) of next command
+    # Each command can have zero or more outputs. These outputs are stored in
+    # an outputs list. After all commands are processed, iris takes the final
+    # output in the outputs list to be the response message.
+    #
+    # When piping, every output from the previous command is split back into
+    # words. Then, the default behaviour is to concatenate the split words to
+    # the arguments given to the next command
+    #
+    # The outputs list is maintained throughout execution, and so subsequent
+    # commands receive all outputs from all prior commands.
+    #
+    # Commands can contain input placeholders of the form <1> <2>, etc.
+    # In this case, they index the list of outputs (1-based indexing).
+    # Outputs named in this way are not concatenated to the arguments list, but
+    # instead take the place of their placeholder. However, outputs not named
+    # will be concatenated as usual
     outputs = []
     for command in commands:
-        command_name = command.split(' ')[0]
+        command_name, *args = command.split(' ')
         func = [o[1] for o in functions_list if o[0] == command_name][0]
-        args = command.split(' ')[1:]
         args = [a.strip() for a in args]
 
-        # get highest placeholder num in args
+        # TODO: Get highest placeholder num in args
 
         for idx, o in enumerate(outputs):
             if is_non_str_iterable(o):
+                # If output is iterable, but not a str, we assume it is a list
+                # of str intended to be split into messages, and join them.
                 o = "\n".join(o)
 
             pos_string = f'<{idx+1}>'
             if pos_string not in args:
-                args.extend(o.split())
+                args.extend(o.split(" "))
             else:
                 indices = [idx for idx, x in enumerate(args) if x == pos_string]
                 for ind in indices:
-                    args = args[:ind] + o.split() + args[ind+1:]
+                    args = args[:ind] + o.split(" ") + args[ind+1:]
         reply = func(db_session, message, *args)
         outputs.extend(reply)
 
