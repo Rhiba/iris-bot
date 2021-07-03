@@ -117,27 +117,54 @@ def process_commands(db_session,  client, message):
             new_commands = new_command.split('|')
             commands = commands[:idx] + new_commands + commands[idx:]
 
-    # input placeholders given by <1> <2> etc, if none given, assume output of previous command goes to final input(s) of next command
+    # Each command can have zero or more outputs. These outputs are stored in
+    # an outputs list. After all commands are processed, iris takes the final
+    # output in the outputs list to be the response message.
+    #
+    # When piping, the default behaviour is to pass the last output from
+    # previous commands to the next command. When an output is passed, it is
+    # first split into a list of words; the words are then appended to the
+    # argument list for the next command.
+    #
+    # Commands can contain input placeholders of the form <1> <2>, etc.
+    # These placeholders index the outputs list (starting from 1).
+    # Outputs named in this way are not concatenated to the arguments list, but
+    # instead substituted for their placeholder.
+    #
+    # When any placeholders are provided, outputs which are not named are not
+    # concatenated to the argument list.
+    #
+    # The outputs list is maintained throughout execution, and so subsequent
+    # commands can access all outputs from all prior commands.
     outputs = []
     for command in commands:
-        command_name = command.split(' ')[0]
+        command_name, *args = command.split(' ')
         func = [o[1] for o in functions_list if o[0] == command_name][0]
-        args = command.split(' ')[1:]
         args = [a.strip() for a in args]
 
-        # get highest placeholder num in args
+        placeholders = {
+            arg_index: int(match[1]) - 1
+            for arg_index, match in enumerate(re.fullmatch(r'<(\d+)>', arg)
+                                              for arg in args)
+            if match}
 
-        for idx, o in enumerate(outputs):
+        def pipe_output(o):
             if is_non_str_iterable(o):
+                # If output is iterable, but not a str, we assume it is a list
+                # of str intended to be split into messages, and join them.
                 o = "\n".join(o)
+            return o.split(" ")
 
-            pos_string = f'<{idx+1}>'
-            if pos_string not in args:
-                args.extend(o.split())
-            else:
-                indices = [idx for idx, x in enumerate(args) if x == pos_string]
-                for ind in indices:
-                    args = args[:ind] + o.split() + args[ind+1:]
+        if placeholders:
+            for arg_index, output_index in reversed(placeholders.items()):
+                try:
+                    output = outputs[output_index]
+                except IndexError:
+                    continue
+                args = args[:arg_index] + pipe_output(output) + args[arg_index+1:]
+        elif outputs:
+            args += pipe_output(outputs[-1])
+
         reply = func(db_session, message, *args)
         outputs.extend(reply)
 
